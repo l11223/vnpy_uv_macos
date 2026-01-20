@@ -50,6 +50,17 @@ def main():
         event_engine = EventEngine()
         main_engine = MainEngine(event_engine)
         
+        # 配置通达信数据服务（A股历史数据）
+        try:
+            from vnpy.trader.setting import SETTINGS
+            # 设置使用通达信数据服务
+            SETTINGS["datafeed.name"] = "tdx"
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write("✅ 通达信数据服务已配置\n")
+        except Exception as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"⚠️ 通达信数据服务配置失败: {e}\n")
+        
         # 加载可选模块
         try:
             from vnpy_ctastrategy import CtaStrategyApp

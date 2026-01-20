@@ -52,6 +52,9 @@ jobs:
           # 安装 ta-lib Python 包
           pip install TA-Lib==0.6.4
           
+          # 安装通达信数据接口依赖
+          pip install mootdx || echo "mootdx 安装失败，继续..."
+          
           # 安装项目依赖
           pip install -e .
           
@@ -71,6 +74,8 @@ jobs:
           python -c "import vnpy_ctabacktester; print('✅ vnpy_ctabacktester installed')"
           python -c "import futu; print('✅ futu SDK installed')" || echo "⚠️ futu SDK not installed"
           python -c "from vnpy_futu.futu_gateway import FutuGateway; print('✅ FutuGateway can be imported')" || echo "⚠️ FutuGateway import failed"
+          python -c "import mootdx; print('✅ mootdx installed')" || echo "⚠️ mootdx not installed"
+          python -c "from vnpy_tdx.tdx_datafeed import TdxDatafeed; print('✅ TdxDatafeed can be imported')" || echo "⚠️ TdxDatafeed import failed"
 
       - name: Build App with PyInstaller
         run: |
@@ -84,6 +89,7 @@ jobs:
             --name "VNPY-Mac" \
             --add-data "vnpy:vnpy" \
             --add-data "vnpy_futu:vnpy_futu" \
+            --add-data "vnpy_tdx:vnpy_tdx" \
             --add-data "strategies:strategies" \
             --hidden-import vnpy \
             --hidden-import vnpy.trader \
@@ -102,6 +108,12 @@ jobs:
             --hidden-import vnpy.rpc \
             --hidden-import vnpy_futu \
             --hidden-import vnpy_futu.futu_gateway \
+            --hidden-import vnpy_tdx \
+            --hidden-import vnpy_tdx.tdx_datafeed \
+            --hidden-import vnpy_tdx.engine \
+            --hidden-import mootdx \
+            --hidden-import mootdx.reader \
+            --hidden-import mootdx.quotes \
             --hidden-import vnpy_ctastrategy \
             --hidden-import vnpy_ctabacktester \
             --hidden-import vnpy_sqlite \
@@ -135,6 +147,7 @@ jobs:
             --collect-all vnpy_ctabacktester \
             --collect-all vnpy_sqlite \
             --collect-all futu \
+            --collect-all mootdx \
             vnpy_launcher.py
           
           echo ""
