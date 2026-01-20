@@ -73,12 +73,13 @@ jobs:
           echo "PyInstaller 打包"
           echo "=========================================="
           
-          # 使用简化的启动脚本，避免复杂的依赖问题
           pyinstaller \
             --onefile \
             --windowed \
             --name "VNPY-Mac" \
             --add-data "vnpy:vnpy" \
+            --add-data "vnpy_futu:vnpy_futu" \
+            --add-data "strategies:strategies" \
             --hidden-import vnpy \
             --hidden-import vnpy.trader \
             --hidden-import vnpy.trader.ui \
@@ -94,6 +95,8 @@ jobs:
             --hidden-import vnpy.event.engine \
             --hidden-import vnpy.chart \
             --hidden-import vnpy.rpc \
+            --hidden-import vnpy_futu \
+            --hidden-import vnpy_futu.futu_gateway \
             --hidden-import vnpy_ctastrategy \
             --hidden-import vnpy_ctabacktester \
             --hidden-import vnpy_sqlite \
