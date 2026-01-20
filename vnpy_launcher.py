@@ -66,8 +66,12 @@ def main():
         try:
             from vnpy_futu.futu_gateway import FutuGateway
             main_engine.add_gateway(FutuGateway)
-        except ImportError:
-            pass
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write("✅ FutuGateway 已加载\n")
+        except ImportError as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"⚠️ FutuGateway 加载失败: {e}\n")
+            # 不抛出异常，让程序继续运行
         
         # 创建主窗口
         main_window = MainWindow(main_engine, event_engine)

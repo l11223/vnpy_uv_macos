@@ -55,6 +55,9 @@ jobs:
           # 安装项目依赖
           pip install -e .
           
+          # 安装富途 SDK（FutuGateway 需要）
+          pip install futu || echo "futu 安装失败，继续..."
+          
           # 安装打包工具
           pip install pyinstaller
           pip install Pillow
@@ -66,6 +69,8 @@ jobs:
           python -c "import talib; print('✅ TA-Lib installed')"
           python -c "import vnpy_ctastrategy; print('✅ vnpy_ctastrategy installed')"
           python -c "import vnpy_ctabacktester; print('✅ vnpy_ctabacktester installed')"
+          python -c "import futu; print('✅ futu SDK installed')" || echo "⚠️ futu SDK not installed"
+          python -c "from vnpy_futu.futu_gateway import FutuGateway; print('✅ FutuGateway can be imported')" || echo "⚠️ FutuGateway import failed"
 
       - name: Build App with PyInstaller
         run: |
@@ -117,6 +122,10 @@ jobs:
             --hidden-import deap \
             --hidden-import plotly \
             --hidden-import tqdm \
+            --hidden-import futu \
+            --hidden-import futu.OpenQuoteContext \
+            --hidden-import futu.OpenSecTradeContext \
+            --hidden-import futu.OpenFutureTradeContext \
             --collect-all PySide6 \
             --collect-all qdarkstyle \
             --collect-all pyqtgraph \
@@ -125,6 +134,7 @@ jobs:
             --collect-all vnpy_ctastrategy \
             --collect-all vnpy_ctabacktester \
             --collect-all vnpy_sqlite \
+            --collect-all futu \
             vnpy_launcher.py
           
           echo ""
