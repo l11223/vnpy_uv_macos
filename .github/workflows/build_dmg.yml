@@ -102,6 +102,16 @@ jobs:
             --hidden-import vnpy.trader.gateway \
             --hidden-import vnpy.trader.database \
             --hidden-import vnpy.trader.datafeed \
+            --hidden-import vnpy.trader.platform_utils \
+            --hidden-import vnpy.trader.multiprocess_manager \
+            --hidden-import vnpy.trader.enhanced_cta_template \
+            --hidden-import vnpy.trader.history_manager \
+            --hidden-import vnpy.trader.data_filter \
+            --hidden-import vnpy.trader.multiprocess_backtester \
+            --hidden-import vnpy.trader.optimization_metrics \
+            --hidden-import vnpy.trader.optimization_visualization \
+            --hidden-import vnpy.trader.enhanced_risk_manager \
+            --hidden-import vnpy.trader.status_monitor \
             --hidden-import vnpy.event \
             --hidden-import vnpy.event.engine \
             --hidden-import vnpy.chart \
