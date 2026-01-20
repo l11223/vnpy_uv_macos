@@ -61,18 +61,32 @@ def main():
             with open(log_file, 'a', encoding='utf-8') as f:
                 f.write(f"⚠️ 通达信数据服务配置失败: {e}\n")
         
-        # 加载可选模块
+        # 加载可选模块（必须在创建 MainWindow 之前注册）
         try:
             from vnpy_ctastrategy import CtaStrategyApp
             main_engine.add_app(CtaStrategyApp)
-        except ImportError:
-            pass
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write("✅ CtaStrategyApp 已注册\n")
+        except ImportError as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"⚠️ CtaStrategyApp 未安装: {e}\n")
+        except Exception as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"❌ CtaStrategyApp 注册失败: {e}\n")
+            traceback.print_exc()
         
         try:
             from vnpy_ctabacktester import CtaBacktesterApp
             main_engine.add_app(CtaBacktesterApp)
-        except ImportError:
-            pass
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write("✅ CtaBacktesterApp 已注册\n")
+        except ImportError as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"⚠️ CtaBacktesterApp 未安装: {e}\n")
+        except Exception as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"❌ CtaBacktesterApp 注册失败: {e}\n")
+            traceback.print_exc()
         
         try:
             from vnpy_futu.futu_gateway import FutuGateway
@@ -81,22 +95,28 @@ def main():
                 f.write("✅ FutuGateway 已加载\n")
         except ImportError as e:
             with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(f"⚠️ FutuGateway 加载失败: {e}\n")
-            # 不抛出异常，让程序继续运行
+                f.write(f"⚠️ FutuGateway 未安装: {e}\n")
+        except Exception as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"❌ FutuGateway 加载失败: {e}\n")
         
-        # 创建主窗口
-        main_window = MainWindow(main_engine, event_engine)
-        main_window.showMaximized()
-        
-        # 注册增强功能 App（带 UI 窗口）
+        # 注册增强功能 App（必须在创建 MainWindow 之前注册）
         try:
             from vnpy_history_manager import HistoryManagerApp
             main_engine.add_app(HistoryManagerApp)
             with open(log_file, 'a', encoding='utf-8') as f:
                 f.write("✅ 历史数据管理器 App 已注册\n")
+        except ImportError as e:
+            with open(log_file, 'a', encoding='utf-8') as f:
+                f.write(f"⚠️ 历史数据管理器 App 未安装: {e}\n")
         except Exception as e:
             with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(f"⚠️ 历史数据管理器 App 注册失败: {e}\n")
+                f.write(f"❌ 历史数据管理器 App 注册失败: {e}\n")
+            # 不阻止启动，继续运行
+        
+        # 创建主窗口（所有 App 必须在之前注册）
+        main_window = MainWindow(main_engine, event_engine)
+        main_window.showMaximized()
         
         # 记录成功
         with open(log_file, 'a', encoding='utf-8') as f:
