@@ -90,6 +90,7 @@ jobs:
             --add-data "vnpy:vnpy" \
             --add-data "vnpy_futu:vnpy_futu" \
             --add-data "vnpy_tdx:vnpy_tdx" \
+            --add-data "vnpy_history_manager:vnpy_history_manager" \
             --add-data "strategies:strategies" \
             --hidden-import vnpy \
             --hidden-import vnpy.trader \
@@ -121,6 +122,10 @@ jobs:
             --hidden-import vnpy_tdx \
             --hidden-import vnpy_tdx.tdx_datafeed \
             --hidden-import vnpy_tdx.engine \
+            --hidden-import vnpy_history_manager \
+            --hidden-import vnpy_history_manager.app \
+            --hidden-import vnpy_history_manager.engine \
+            --hidden-import vnpy_history_manager.ui.widget \
             --hidden-import mootdx \
             --hidden-import mootdx.reader \
             --hidden-import mootdx.quotes \

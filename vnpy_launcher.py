@@ -88,26 +88,15 @@ def main():
         main_window = MainWindow(main_engine, event_engine)
         main_window.showMaximized()
         
-        # 初始化增强功能模块（Elite 核心功能）
+        # 注册增强功能 App（带 UI 窗口）
         try:
-            # 初始化历史数据管理器
-            from vnpy.trader.history_manager import HistoryManager
-            history_manager = HistoryManager(main_engine)
+            from vnpy_history_manager import HistoryManagerApp
+            main_engine.add_app(HistoryManagerApp)
             with open(log_file, 'a', encoding='utf-8') as f:
-                f.write("✅ 历史数据管理器已初始化\n")
+                f.write("✅ 历史数据管理器 App 已注册\n")
         except Exception as e:
             with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(f"⚠️ 历史数据管理器初始化失败: {e}\n")
-        
-        try:
-            # 初始化状态监控器
-            from vnpy.trader.status_monitor import StatusMonitor
-            status_monitor = StatusMonitor(main_engine, event_engine)
-            with open(log_file, 'a', encoding='utf-8') as f:
-                f.write("✅ 状态监控器已初始化\n")
-        except Exception as e:
-            with open(log_file, 'a', encoding='utf-8') as f:
-                f.write(f"⚠️ 状态监控器初始化失败: {e}\n")
+                f.write(f"⚠️ 历史数据管理器 App 注册失败: {e}\n")
         
         # 记录成功
         with open(log_file, 'a', encoding='utf-8') as f:
