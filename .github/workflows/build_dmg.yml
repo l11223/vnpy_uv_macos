@@ -1,0 +1,265 @@
+# VNPY UV macOS - DMG 自动打包
+# 专为 Apple Silicon (M1/M2/M3/M4) 优化
+name: Build macOS DMG
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14  # Apple Silicon 原生支持
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install System Dependencies
+        run: |
+          echo "=========================================="
+          echo "安装系统依赖"
+          echo "=========================================="
+          
+          # 安装 ta-lib 系统库
+          brew install ta-lib
+          
+          # 安装 DMG 工具
+          brew install create-dmg || true
+          
+          echo "✅ 系统依赖安装完成"
+
+      - name: Install Python Dependencies
+        run: |
+          echo "=========================================="
+          echo "安装 Python 依赖"
+          echo "=========================================="
+          
+          python -m pip install --upgrade pip setuptools wheel
+          
+          # 安装 uv（快速包管理器）
+          pip install uv
+          
+          # 安装 numpy（ta-lib 依赖）
+          pip install numpy==2.2.3
+          
+          # 安装 ta-lib Python 包
+          pip install TA-Lib==0.6.4
+          
+          # 安装项目依赖
+          pip install -e .
+          
+          # 安装打包工具
+          pip install pyinstaller
+          pip install Pillow
+          
+          echo ""
+          echo "验证安装..."
+          python -c "import vnpy; print('✅ VNPY:', vnpy.__version__)"
+          python -c "import PySide6; print('✅ PySide6 installed')"
+          python -c "import talib; print('✅ TA-Lib installed')"
+          python -c "import vnpy_ctastrategy; print('✅ vnpy_ctastrategy installed')"
+          python -c "import vnpy_ctabacktester; print('✅ vnpy_ctabacktester installed')"
+
+      - name: Build App with PyInstaller
+        run: |
+          echo "=========================================="
+          echo "PyInstaller 打包"
+          echo "=========================================="
+          
+          pyinstaller \
+            --onefile \
+            --windowed \
+            --name "VNPY-Mac" \
+            --add-data "vnpy:vnpy" \
+            --add-data "vnpy_futu:vnpy_futu" \
+            --add-data "strategies:strategies" \
+            --hidden-import vnpy \
+            --hidden-import vnpy.trader \
+            --hidden-import vnpy.trader.ui \
+            --hidden-import vnpy.trader.engine \
+            --hidden-import vnpy.trader.utility \
+            --hidden-import vnpy.trader.setting \
+            --hidden-import vnpy.trader.constant \
+            --hidden-import vnpy.trader.object \
+            --hidden-import vnpy.trader.gateway \
+            --hidden-import vnpy.trader.database \
+            --hidden-import vnpy.trader.datafeed \
+            --hidden-import vnpy.event \
+            --hidden-import vnpy.event.engine \
+            --hidden-import vnpy.chart \
+            --hidden-import vnpy.rpc \
+            --hidden-import vnpy_futu \
+            --hidden-import vnpy_futu.futu_gateway \
+            --hidden-import vnpy_ctastrategy \
+            --hidden-import vnpy_ctabacktester \
+            --hidden-import vnpy_sqlite \
+            --hidden-import PySide6 \
+            --hidden-import PySide6.QtCore \
+            --hidden-import PySide6.QtGui \
+            --hidden-import PySide6.QtWidgets \
+            --hidden-import qdarkstyle \
+            --hidden-import pyqtgraph \
+            --hidden-import loguru \
+            --hidden-import tzlocal \
+            --hidden-import talib \
+            --hidden-import talib.stream \
+            --hidden-import talib.abstract \
+            --hidden-import numpy \
+            --hidden-import pandas \
+            --hidden-import zmq \
+            --hidden-import deap \
+            --hidden-import plotly \
+            --hidden-import tqdm \
+            --collect-all PySide6 \
+            --collect-all qdarkstyle \
+            --collect-all pyqtgraph \
+            --collect-all talib \
+            --collect-all vnpy \
+            --collect-all vnpy_ctastrategy \
+            --collect-all vnpy_ctabacktester \
+            --collect-all vnpy_sqlite \
+            main.py
+          
+          echo ""
+          echo "=========================================="
+          echo "验证打包结果"
+          echo "=========================================="
+          
+          echo "dist 目录："
+          ls -la dist/
+          
+          if [ -d "dist/VNPY-Mac.app" ]; then
+            echo "✅ .app 已创建"
+            echo "Contents:"
+            ls -la "dist/VNPY-Mac.app/Contents/"
+            echo "MacOS:"
+            ls -la "dist/VNPY-Mac.app/Contents/MacOS/"
+            echo "Info.plist:"
+            cat "dist/VNPY-Mac.app/Contents/Info.plist"
+          else
+            echo "未找到 .app，检查可执行文件..."
+            if [ -f "dist/VNPY-Mac" ]; then
+              echo "找到可执行文件，手动创建 .app..."
+              mkdir -p "dist/VNPY-Mac.app/Contents/MacOS"
+              mkdir -p "dist/VNPY-Mac.app/Contents/Resources"
+              cp "dist/VNPY-Mac" "dist/VNPY-Mac.app/Contents/MacOS/"
+              chmod +x "dist/VNPY-Mac.app/Contents/MacOS/VNPY-Mac"
+              
+              printf '%s\n' \
+                '<?xml version="1.0" encoding="UTF-8"?>' \
+                '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+                '<plist version="1.0">' \
+                '<dict>' \
+                '    <key>CFBundleExecutable</key>' \
+                '    <string>VNPY-Mac</string>' \
+                '    <key>CFBundleIdentifier</key>' \
+                '    <string>com.vnpy.mac</string>' \
+                '    <key>CFBundleName</key>' \
+                '    <string>VNPY</string>' \
+                '    <key>CFBundleDisplayName</key>' \
+                '    <string>VNPY量化交易系统</string>' \
+                '    <key>CFBundleVersion</key>' \
+                '    <string>4.3.0</string>' \
+                '    <key>CFBundleShortVersionString</key>' \
+                '    <string>4.3</string>' \
+                '    <key>CFBundlePackageType</key>' \
+                '    <string>APPL</string>' \
+                '    <key>LSMinimumSystemVersion</key>' \
+                '    <string>11.0</string>' \
+                '    <key>NSHighResolutionCapable</key>' \
+                '    <true/>' \
+                '</dict>' \
+                '</plist>' > "dist/VNPY-Mac.app/Contents/Info.plist"
+              
+              echo "✅ 手动创建 .app 完成"
+            else
+              echo "❌ 打包失败"
+              exit 1
+            fi
+          fi
+
+      - name: Prepare DMG Contents
+        run: |
+          echo "准备 DMG 内容..."
+          
+          rm -rf VNPY.app
+          cp -R "dist/VNPY-Mac.app" VNPY.app
+          
+          # 验证
+          EXEC_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" VNPY.app/Contents/Info.plist 2>/dev/null || echo "VNPY-Mac")
+          echo "CFBundleExecutable: $EXEC_NAME"
+          
+          if [ -f "VNPY.app/Contents/MacOS/$EXEC_NAME" ]; then
+            echo "✅ 可执行文件存在"
+            chmod +x "VNPY.app/Contents/MacOS/$EXEC_NAME"
+          else
+            echo "❌ 可执行文件不存在"
+            ls -la VNPY.app/Contents/MacOS/
+            exit 1
+          fi
+          
+          # 代码签名
+          codesign --force --deep --sign - VNPY.app || echo "签名跳过"
+
+      - name: Build DMG
+        run: |
+          echo "创建 DMG..."
+          
+          mkdir -p dmg-contents
+          cp -R VNPY.app dmg-contents/
+          ln -s /Applications dmg-contents/Applications
+          
+          printf '%s\n' \
+            "VNPY Mac 量化交易系统 v4.3.0" \
+            "================================" \
+            "" \
+            "安装说明：" \
+            "1. 将 VNPY.app 拖到 Applications 文件夹" \
+            "2. 首次运行请右键点击 -> 打开" \
+            "" \
+            "如遇安全提示，请在终端执行：" \
+            "xattr -d com.apple.quarantine /Applications/VNPY.app" \
+            "" \
+            "功能特性：" \
+            "- CTA策略引擎" \
+            "- CTA回测模块" \
+            "- 富途接口支持" \
+            "- AI量化模块" \
+            "" \
+            "系统要求：macOS 11.0+ (Apple Silicon)" > dmg-contents/README.txt
+          
+          if command -v create-dmg > /dev/null 2>&1; then
+            create-dmg \
+              --volname "VNPY Mac v4.3.0" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --icon "VNPY.app" 150 200 \
+              --app-drop-link 450 200 \
+              "VNPY-Mac-v4.3.0-arm64.dmg" \
+              dmg-contents/ || hdiutil create -volname "VNPY Mac" -srcfolder dmg-contents -ov -format UDZO "VNPY-Mac-v4.3.0-arm64.dmg"
+          else
+            hdiutil create -volname "VNPY Mac v4.3.0" -srcfolder dmg-contents -ov -format UDZO "VNPY-Mac-v4.3.0-arm64.dmg"
+          fi
+          
+          if [ -f "VNPY-Mac-v4.3.0-arm64.dmg" ]; then
+            echo "✅ DMG 创建成功"
+            ls -lh VNPY-Mac-v4.3.0-arm64.dmg
+          else
+            echo "❌ DMG 创建失败"
+            exit 1
+          fi
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: VNPY-Mac-DMG
+          path: VNPY-Mac-v4.3.0-arm64.dmg
+          if-no-files-found: error
